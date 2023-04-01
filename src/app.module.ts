@@ -12,6 +12,8 @@ import * as Joi from 'joi';
             validationSchema: Joi.object({
                 NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
                 PORT: Joi.number().default(3000),
+                JWT_SECRET: Joi.string().required(),
+                // JWT_EXP: Joi.string().required(),
             }),
         }),
         AuthModule,

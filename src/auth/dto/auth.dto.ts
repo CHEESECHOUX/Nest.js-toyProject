@@ -6,3 +6,6 @@ export class AuthDTO {
     password: string;
     name: string;
 }
+export class SignInResponseDto {
+    accessToken: string;
+}
