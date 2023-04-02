@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import * as Joi from 'joi';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 @Module({
     imports: [
@@ -26,9 +27,10 @@ import { UsersModule } from './users/users.module';
             password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
-            synchronize: true,
-            logging: true,
+            synchronize: false,
+            logging: false,
             socketPath: '/tmp/mysql.sock',
+            namingStrategy: new SnakeNamingStrategy(),
         }),
         AuthModule,
         UsersModule,
