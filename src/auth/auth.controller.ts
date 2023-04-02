@@ -19,8 +19,9 @@ export class AuthController {
         return;
     }
 
+    @UseGuards(JwtAuthGuard)
     @Post('/login')
-    async login(@Body() dto: AuthDTO): Promise<SignInResponseDto> {
-        return this.authService.login(dto);
+    async login(@Body() authdto: AuthDTO): Promise<SignInResponseDto> {
+        return this.authService.login(authdto);
     }
 }
