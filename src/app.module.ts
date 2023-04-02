@@ -17,6 +17,10 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
                 PORT: Joi.number().default(3000),
                 JWT_SECRET: Joi.string().required(),
                 JWT_EXP: Joi.string().required(),
+                DB_HOST: Joi.string().required(),
+                DB_USERNAME: Joi.string().required(),
+                DB_PASSWORD: Joi.string().required(),
+                DB_NAME: Joi.string().required(),
             }),
         }),
         TypeOrmModule.forRoot({
