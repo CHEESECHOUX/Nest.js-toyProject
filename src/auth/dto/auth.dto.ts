@@ -7,3 +7,9 @@ export class AuthDTO {
 export class SignInResponseDto {
     accessToken: string;
 }
+
+export interface UserInfo {
+    id: string;
+    name: string;
+    password: string;
+}

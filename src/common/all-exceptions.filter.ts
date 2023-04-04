@@ -16,7 +16,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         const response = (exception as HttpException).getResponse();
 
         const log = {
-            timstamp: new Date(),
+            timestamp: new Date(),
             url: req.url,
             response,
         };
