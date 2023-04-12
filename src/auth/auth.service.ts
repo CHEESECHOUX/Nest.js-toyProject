@@ -4,8 +4,8 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { User } from 'src/users/user.entity';
 import * as bcrypt from 'bcrypt';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeOrm';
+import { InjectRepository } from '@nestjs/typeOrm';
 
 @Injectable()
 export class AuthService {
@@ -17,13 +17,10 @@ export class AuthService {
 
     async signUp(authDto: AuthDTO): Promise<User> {
         const { name, email, password } = authDto;
-        console.log(name, email);
 
-        // const saltOrRounds = 10;
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // console.log(hashedPassword);
         const user = new User();
         user.name = name;
         user.email = email;
@@ -42,19 +39,20 @@ export class AuthService {
         return user;
     }
 
-    async login(authDto: AuthDTO): Promise<SignInResponseDto> {
-        const { email, password } = authDto;
+    async login(authDTO: AuthDTO): Promise<SignInResponseDto> {
+        const { email, password } = authDTO;
 
         const user = await this.usersService.getUserByEmail(email);
         if (!user) {
             throw new UnauthorizedException('해당 이메일을 찾을 수 없습니다');
         }
-        if (user && user.password !== password) {
+        if (user && (await bcrypt.compare(password, user.password))) {
             throw new UnauthorizedException('비밀번호를 다시 확인해주세요');
         }
-        const payload = { username: user.name };
-        return {
-            accessToken: this.jwtService.sign(payload),
-        };
+
+        const payload = { email: user.email };
+        const accessToken = await this.jwtService.signAsync(payload);
+
+        return { accessToken };
     }
 }

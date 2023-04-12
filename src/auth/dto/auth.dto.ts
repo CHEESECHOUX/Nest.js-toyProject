@@ -1,10 +1,17 @@
+import { IsString } from 'class-validator';
 export class AuthDTO {
-    id: number;
+    @IsString()
     email: string;
-    name: string;
+
+    @IsString()
     password: string;
+
+    @IsString()
+    name: string;
 }
+
 export class SignInResponseDto {
+    @IsString()
     accessToken: string;
 }
 
