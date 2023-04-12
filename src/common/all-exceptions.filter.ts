@@ -1,28 +1,27 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
     private readonly logger = new Logger(AllExceptionsFilter.name);
 
-    catch(exception: Error, host: ArgumentsHost) {
+    catch(exception: HttpException | Error, host: ArgumentsHost) {
+        // 여기 exception 종류? 다시보기
         const ctx = host.switchToHttp();
         const res = ctx.getResponse<Response>();
         const req = ctx.getRequest<Request>();
 
-        if (!(exception instanceof HttpException)) {
-            exception = new InternalServerErrorException();
-        }
+        const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
+        const message = exception instanceof HttpException ? exception.toString() : exception instanceof Error ? exception.message : undefined;
 
-        const response = (exception as HttpException).getResponse();
-
-        const log = {
+        const responseBody = {
             timestamp: new Date(),
+            statusCode: status,
+            message,
             url: req.url,
-            response,
         };
 
-        console.log(log);
+        this.logger.error(responseBody, exception instanceof Error ? exception.stack : undefined);
 
-        res.status((exception as HttpException).getStatus()).json(response);
+        res.status(status).json(responseBody);
     }
 }

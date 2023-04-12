@@ -17,11 +17,13 @@ export class AuthService {
 
     async signUp(authDto: AuthDTO): Promise<User> {
         const { name, email, password } = authDto;
+        console.log(name, email);
 
         // const saltOrRounds = 10;
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        // console.log(hashedPassword);
         const user = new User();
         user.name = name;
         user.email = email;
@@ -43,7 +45,7 @@ export class AuthService {
     async login(authDto: AuthDTO): Promise<SignInResponseDto> {
         const { email, password } = authDto;
 
-        const user = await this.usersService.findOne(email);
+        const user = await this.usersService.getUserByEmail(email);
         if (!user) {
             throw new UnauthorizedException('해당 이메일을 찾을 수 없습니다');
         }

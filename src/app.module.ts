@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import * as Joi from 'joi';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule } from '@nestjs/typeOrm';
 import { UsersModule } from './users/users.module';
-import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import { SnakeNamingStrategy } from 'typeOrm-naming-strategies';
 
 @Module({
     imports: [
@@ -16,25 +16,34 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
                 NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
                 PORT: Joi.number().default(3000),
                 JWT_SECRET: Joi.string().required(),
-                JWT_EXP: Joi.string().required(),
+                JWT_EXP: Joi.number().required(),
                 DB_HOST: Joi.string().required(),
                 DB_USERNAME: Joi.string().required(),
                 DB_PASSWORD: Joi.string().required(),
                 DB_NAME: Joi.string().required(),
-            }),
+            }).options({ stripUnknown: true }),
+            validationOptions: {
+                allowUnknown: false,
+                abortEarly: true,
+            },
         }),
-        TypeOrmModule.forRoot({
-            type: 'mysql',
-            host: process.env.DB_HOST,
-            port: 3306,
-            username: process.env.DB_USERNAME,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
-            entities: [__dirname + '/**/*.entity{.ts,.js}'],
-            synchronize: false,
-            logging: false,
-            socketPath: '/tmp/mysql.sock',
-            namingStrategy: new SnakeNamingStrategy(),
+        TypeOrmModule.forRootAsync({
+            imports: [ConfigModule],
+            inject: [ConfigService],
+            useFactory: (configService: ConfigService) => ({
+                type: 'mysql',
+                host: configService.get('DB_HOST'),
+                port: 3306,
+                username: configService.get('DB_USERNAME'),
+                password: configService.get('DB_PASSWORD'),
+                database: configService.get('DB_NAME'),
+                entities: [__dirname + '/**/*.entity{.ts,.js}'],
+                synchronize: false,
+                autoLoadEntities: true,
+                logging: false,
+                socketPath: '/tmp/mysql.sock',
+                namingStrategy: new SnakeNamingStrategy(),
+            }),
         }),
         AuthModule,
         UsersModule,
