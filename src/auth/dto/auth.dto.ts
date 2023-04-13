@@ -1,11 +1,13 @@
-import { IsString } from 'class-validator';
-export class AuthDTO {
-    @IsString()
+import { IsEmail, IsString } from 'class-validator';
+export class LogInDTO {
+    @IsEmail()
     email: string;
 
     @IsString()
     password: string;
+}
 
+export class CreateUserDTO extends LogInDTO {
     @IsString()
     name: string;
 }
