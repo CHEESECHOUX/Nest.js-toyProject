@@ -16,9 +16,3 @@ export class SignInResponseDto {
     @IsString()
     accessToken: string;
 }
-
-export interface UserInfo {
-    id: string;
-    name: string;
-    password: string;
-}
