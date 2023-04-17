@@ -22,7 +22,7 @@ async function bootstrap() {
             transform: true,
             whitelist: true,
             transformOptions: { enableImplicitConversion: true },
-            disableErrorMessages: false,
+            disableErrorMessages: true,
         }),
     );
 
