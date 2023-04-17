@@ -2,7 +2,7 @@ import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/co
 import { CreateUserDTO, LogInDTO, SignInResponseDto } from './dto/auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
-import { User } from 'src/users/user.entity';
+import { User } from '@src/users/user.entity';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeOrm';
 import { InjectRepository } from '@nestjs/typeOrm';
@@ -29,7 +29,7 @@ export class AuthService {
         try {
             await this.usersRepository.save(user);
         } catch (error) {
-            if (error.code === '23505') {
+            if (error.code === 'ER_DUP_ENTRY') {
                 throw new ConflictException('이미 존재하는 이메일입니다');
             } else {
                 throw error;
