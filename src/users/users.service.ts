@@ -1,9 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeOrm';
 import { User } from './user.entity';
-import { Repository } from 'typeOrm';
+import { Repository } from 'typeorm';
 import { UsersInfoDTO } from './dto/users.dto';
-import { AuthUserType } from 'src/common/decorators/users.decorator';
+import { AuthUserType } from '@src/common/decorators/users.decorator';
 
 @Injectable()
 export class UsersService {

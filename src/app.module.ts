@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { AppController } from '@src/app.controller';
+import { AppService } from '@src/app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from '@src/auth/auth.module';
 import * as Joi from 'joi';
 import { TypeOrmModule } from '@nestjs/typeOrm';
-import { UsersModule } from './users/users.module';
-import { SnakeNamingStrategy } from 'typeOrm-naming-strategies';
+import { UsersModule } from '@src/users/users.module';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 @Module({
     imports: [

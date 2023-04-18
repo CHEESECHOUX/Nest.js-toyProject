@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './common/all-exceptions.filter';
-import { HttpLoggingInterceptor } from './common/http-logging.interceptor';
+import { AppModule } from '@src/app.module';
+import { AllExceptionsFilter } from '@src/common/all-exceptions.filter';
+import { HttpLoggingInterceptor } from '@src/common/http-logging.interceptor';
 import { ValidationPipe } from '@nestjs/common';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 
