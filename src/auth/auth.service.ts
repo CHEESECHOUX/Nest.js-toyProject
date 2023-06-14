@@ -21,20 +21,18 @@ export class AuthService {
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        const existUser = await this.usersRepository.findOne({ where: { email } });
+        if (existUser) {
+            throw new ConflictException('이미 존재하는 이메일입니다');
+        }
+
         const user = new User();
         user.name = name;
         user.email = email;
         user.password = hashedPassword;
 
-        try {
-            await this.usersRepository.save(user);
-        } catch (error) {
-            if (error.code === 'ER_DUP_ENTRY') {
-                throw new ConflictException('이미 존재하는 이메일입니다');
-            } else {
-                throw error;
-            }
-        }
+        await this.usersRepository.save(user);
+
         return user;
     }
 

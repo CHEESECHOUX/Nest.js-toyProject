@@ -21,9 +21,9 @@ export class User {
     @Column({ default: false })
     isDeleted: boolean;
 
-    @CreateDateColumn({ type: 'timestamp' })
+    @CreateDateColumn({ type: 'datetime' })
     createdAt: Date;
 
-    @UpdateDateColumn({ type: 'timestamp' })
+    @UpdateDateColumn({ type: 'datetime' })
     updatedAt: Date;
 }

@@ -18,6 +18,11 @@ describe('AuthService', () => {
     let authService: AuthService;
     let usersRepository: Repository<User>;
 
+    const bcryptMock = {
+        genSalt: jest.fn(() => Promise.resolve('salt')),
+        hashSync: jest.fn((password, salt) => bcrypt.hashSync(password, salt)),
+    };
+
     beforeEach(async () => {
         const module = await Test.createTestingModule({
             imports: [
@@ -59,7 +64,15 @@ describe('AuthService', () => {
                 AuthModule,
                 UsersModule,
             ],
-            providers: [AuthService, JwtStrategy, JwtService],
+            providers: [
+                AuthService,
+                JwtStrategy,
+                JwtService,
+                {
+                    provide: 'bcrypt',
+                    useValue: bcryptMock,
+                },
+            ],
         }).compile();
 
         authService = module.get<AuthService>(AuthService);
@@ -67,26 +80,61 @@ describe('AuthService', () => {
     });
 
     describe('signUp', () => {
-        it('should create user', async () => {
+        it('should create a new user', async () => {
+            // Given
             const createUserDTO = new CreateUserDTO();
             createUserDTO.name = 'jisoo';
             createUserDTO.email = 'jisoo@test.com';
-            createUserDTO.password = '1234';
+            createUserDTO.password = 'hashedPassword';
 
-            const salt = await bcrypt.genSalt();
-            const hashedPassword = await bcrypt.hash(createUserDTO.password, salt);
+            const findOneSpy = jest.spyOn(usersRepository, 'findOne');
+            findOneSpy.mockResolvedValue(null);
 
-            const expectedUser = new User();
-            expectedUser.name = createUserDTO.name;
-            expectedUser.email = createUserDTO.email;
-            expectedUser.password = hashedPassword;
+            const saveSpy = jest.spyOn(usersRepository, 'save');
+            const savedUser = new User();
+            Object.assign(savedUser, createUserDTO);
+            saveSpy.mockResolvedValue(savedUser);
 
-            const userRepositorySaveSpy = jest.spyOn(usersRepository, 'save').mockResolvedValue(expectedUser);
+            const hashSpy = jest.spyOn(bcrypt, 'hash');
+            hashSpy.mockImplementation(async () => 'hashedPassword');
 
+            // When
             const result = await authService.signUp(createUserDTO);
 
-            expect(userRepositorySaveSpy).toBeCalledWith(expectedUser);
-            expect(result).toBe(expectedUser);
+            // Then
+            expect(findOneSpy).toHaveBeenCalledWith({ where: { email: createUserDTO.email } });
+            expect(hashSpy).toHaveBeenCalledWith(createUserDTO.password, expect.any(String));
+            expect(saveSpy).toHaveBeenCalledWith(expect.objectContaining(createUserDTO));
+            expect(result).toEqual(createUserDTO);
+        });
+
+        it('should create a new user', async () => {
+            // Given
+            const createUserDTO = {
+                name: 'jisoo',
+                email: 'jisoo@test.com',
+                password: 'hashedPassword',
+            };
+
+            const findOneSpy = jest.spyOn(usersRepository, 'findOne');
+            findOneSpy.mockResolvedValue(null);
+
+            const saveSpy = jest.spyOn(usersRepository, 'save');
+            const savedUser = new User();
+            Object.assign(savedUser, createUserDTO);
+            saveSpy.mockResolvedValue(savedUser);
+
+            const hashSpy = jest.spyOn(bcrypt, 'hash');
+            hashSpy.mockImplementation(async () => 'hashedPassword');
+
+            // When
+            const result = await authService.signUp(createUserDTO);
+
+            // Then
+            expect(findOneSpy).toHaveBeenCalledWith({ where: { email: createUserDTO.email } });
+            expect(hashSpy).toHaveBeenCalledWith(createUserDTO.password, expect.any(String));
+            expect(saveSpy).toHaveBeenCalledWith(expect.any(User));
+            expect(result).toEqual(savedUser);
         });
     });
 });
