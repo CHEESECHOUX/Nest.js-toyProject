@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { AuthService } from '@src/auth/auth.service';
 import { User } from '@src/users/user.entity';
 import { Repository } from 'typeorm';
-import { CreateUserDTO } from '@src/auth/dto/auth.dto';
+import { CreateUserDTO, SignInResponseDto } from '@src/auth/dto/auth.dto';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { TestAppModule } from '@src/test-app.module';
@@ -72,33 +72,55 @@ describe('AuthService', () => {
             email: 'jisoo@test.com',
             password: 'hashedPassword',
         };
+        const user: User = {
+            id: 1,
+            name: 'Jisoo',
+            email: logInDTO.email,
+            password: 'hashedPassword',
+            isActive: true,
+            isDeleted: false,
+            createdAt: new Date('2023-06-15 00:27:57.070889'),
+            updatedAt: new Date('2023-06-15 00:27:57.070889'),
+        };
 
         it('should throw UnauthorizedException if email is not found', async () => {
+            // Given
             jest.spyOn(usersService, 'getUserByEmail').mockResolvedValue(null);
 
+            // When/Then
             await expect(authService.login(logInDTO)).rejects.toThrow(UnauthorizedException);
             expect(usersService.getUserByEmail).toHaveBeenCalledWith(logInDTO.email);
         });
 
         it('should throw UnauthorizedException if password is not correct', async () => {
-            const user: User = {
-                id: 1,
-                name: 'Jisoo',
-                email: logInDTO.email,
-                password: 'InvalidPassword',
-                isActive: true,
-                isDeleted: false,
-                createdAt: new Date('2023-06-15 00:27:57.070889'),
-                updatedAt: new Date('2023-06-15 00:27:57.070889'),
-            };
+            // Given
             jest.spyOn(usersService, 'getUserByEmail').mockResolvedValue(user); // 해당하는 유저를 찾았다고 가정
             jest.spyOn(bcrypt, 'compare').mockImplementation((password: string, InvalidPassword: string) => {
                 return password !== InvalidPassword;
             });
 
+            // When/Then
             await expect(authService.login(logInDTO)).rejects.toThrow(UnauthorizedException);
             expect(usersService.getUserByEmail).toHaveBeenCalledWith(logInDTO.email);
             expect(bcrypt.compare).toHaveBeenCalledWith(logInDTO.password, user.password);
+        });
+
+        it('should return SignInResponseDto if login success', async () => {
+            // Given
+            jest.spyOn(usersService, 'getUserByEmail').mockResolvedValue(user);
+            jest.spyOn(bcrypt, 'compare').mockImplementation((password: string, correctPassword: string) => {
+                return password === correctPassword;
+            });
+            jest.spyOn(jwtService, 'signAsync').mockResolvedValue('accessToken');
+
+            // When
+            const result: SignInResponseDto = await authService.login(logInDTO);
+
+            // Then
+            expect(usersService.getUserByEmail).toHaveBeenCalledWith(logInDTO.email);
+            expect(bcrypt.compare).toHaveBeenCalledWith(logInDTO.password, user.password);
+            expect(jwtService.signAsync).toHaveBeenCalledWith({ email: user.email });
+            expect(result).toEqual({ accessToken: 'accessToken' });
         });
     });
 });
