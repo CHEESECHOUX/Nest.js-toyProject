@@ -79,5 +79,26 @@ describe('AuthService', () => {
             await expect(authService.login(logInDTO)).rejects.toThrow(UnauthorizedException);
             expect(usersService.getUserByEmail).toHaveBeenCalledWith(logInDTO.email);
         });
+
+        it('should throw UnauthorizedException if password is not correct', async () => {
+            const user: User = {
+                id: 1,
+                name: 'Jisoo',
+                email: logInDTO.email,
+                password: 'InvalidPassword',
+                isActive: true,
+                isDeleted: false,
+                createdAt: new Date('2023-06-15 00:27:57.070889'),
+                updatedAt: new Date('2023-06-15 00:27:57.070889'),
+            };
+            jest.spyOn(usersService, 'getUserByEmail').mockResolvedValue(user); // 해당하는 유저를 찾았다고 가정
+            jest.spyOn(bcrypt, 'compare').mockImplementation((password: string, InvalidPassword: string) => {
+                return password !== InvalidPassword;
+            });
+
+            await expect(authService.login(logInDTO)).rejects.toThrow(UnauthorizedException);
+            expect(usersService.getUserByEmail).toHaveBeenCalledWith(logInDTO.email);
+            expect(bcrypt.compare).toHaveBeenCalledWith(logInDTO.password, user.password);
+        });
     });
 });
