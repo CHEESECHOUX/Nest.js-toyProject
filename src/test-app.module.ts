@@ -7,8 +7,6 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from '@src/auth/auth.service';
 import { JwtStrategy } from '@src/auth/jwt/jwt.strategy';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { User } from '@src/users/user.entity';
 import { AuthModule } from '@src/auth/auth.module';
 import { UsersModule } from '@src/users/users.module';

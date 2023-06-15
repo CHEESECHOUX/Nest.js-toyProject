@@ -6,10 +6,16 @@ import { CreateUserDTO } from '@src/auth/dto/auth.dto';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { TestAppModule } from '@src/test-app.module';
+import { JwtService } from '@nestjs/jwt';
+import { LogInDTO } from '@src/auth/dto/auth.dto';
+import { UnauthorizedException } from '@nestjs/common';
+import { UsersService } from '@src/users/users.service';
 
 describe('AuthService', () => {
     let authService: AuthService;
+    let usersService: UsersService;
     let usersRepository: Repository<User>;
+    let jwtService: JwtService;
 
     beforeEach(async () => {
         const module = await Test.createTestingModule({
@@ -26,7 +32,9 @@ describe('AuthService', () => {
         }).compile();
 
         authService = module.get<AuthService>(AuthService);
+        usersService = module.get<UsersService>(UsersService);
         usersRepository = module.get<Repository<User>>(getRepositoryToken(User));
+        jwtService = module.get<JwtService>(JwtService);
     });
 
     describe('signUp', () => {
@@ -56,6 +64,20 @@ describe('AuthService', () => {
             expect(hashSpy).toHaveBeenCalledWith(createUserDTO.password, expect.any(String));
             expect(saveSpy).toHaveBeenCalledWith(expect.objectContaining(createUserDTO));
             expect(result).toEqual(createUserDTO);
+        });
+    });
+
+    describe('login', () => {
+        const logInDTO: LogInDTO = {
+            email: 'jisoo@test.com',
+            password: 'hashedPassword',
+        };
+
+        it('should throw UnauthorizedException if email is not found', async () => {
+            jest.spyOn(usersService, 'getUserByEmail').mockResolvedValue(null);
+
+            await expect(authService.login(logInDTO)).rejects.toThrow(UnauthorizedException);
+            expect(usersService.getUserByEmail).toHaveBeenCalledWith(logInDTO.email);
         });
     });
 });
