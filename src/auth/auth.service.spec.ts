@@ -38,24 +38,32 @@ describe('AuthService', () => {
     });
 
     describe('signUp', () => {
-        it('should create a new user', async () => {
+        let createUserDTO;
+        let findOneSpy;
+        let saveSpy;
+        let hashSpy;
+        let savedUser;
+
+        beforeEach(() => {
             // Given
-            const createUserDTO = new CreateUserDTO();
+            createUserDTO = new CreateUserDTO();
             createUserDTO.name = 'jisoo';
             createUserDTO.email = 'jisoo@test.com';
             createUserDTO.password = 'hashedPassword';
 
-            const findOneSpy = jest.spyOn(usersRepository, 'findOne');
+            findOneSpy = jest.spyOn(usersRepository, 'findOne');
             findOneSpy.mockResolvedValue(null);
 
-            const saveSpy = jest.spyOn(usersRepository, 'save');
-            const savedUser = new User();
+            saveSpy = jest.spyOn(usersRepository, 'save');
+            savedUser = new User();
             Object.assign(savedUser, createUserDTO);
             saveSpy.mockResolvedValue(savedUser);
 
-            const hashSpy = jest.spyOn(bcrypt, 'hash');
+            hashSpy = jest.spyOn(bcrypt, 'hash');
             hashSpy.mockImplementation(async () => 'hashedPassword');
+        });
 
+        it('should create a new user', async () => {
             // When
             const result = await authService.signUp(createUserDTO);
 
