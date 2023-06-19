@@ -124,9 +124,7 @@ describe('AuthService', () => {
         it('should return SignInResponseDto if login success', async () => {
             // Given
             jest.spyOn(usersService, 'getUserByEmail').mockResolvedValue(user);
-            jest.spyOn(bcrypt, 'compare').mockImplementation((password: string, correctPassword: string) => {
-                return password === correctPassword;
-            });
+            jest.spyOn(bcrypt, 'compare').mockImplementation(() => Promise.resolve(true));
             jest.spyOn(jwtService, 'signAsync').mockResolvedValue('accessToken');
 
             // When
