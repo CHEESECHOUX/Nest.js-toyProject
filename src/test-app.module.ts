@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { Repository } from 'typeorm';
-import { JwtService } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from '@src/auth/auth.service';
 import { JwtStrategy } from '@src/auth/jwt/jwt.strategy';
@@ -13,6 +13,7 @@ import { UsersModule } from '@src/users/users.module';
 import { UsersService } from '@src/users/users.service';
 import * as Joi from 'joi';
 import { AppService } from './app.service';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
     imports: [
@@ -34,7 +35,20 @@ import { AppService } from './app.service';
             },
         }),
         TypeOrmModule.forRootAsync({
-            imports: [ConfigModule],
+            imports: [
+                ConfigModule,
+                PassportModule,
+                JwtModule.registerAsync({
+                    imports: [ConfigModule],
+                    inject: [ConfigService],
+                    useFactory: async (config: ConfigService) => ({
+                        secret: config.get('JWT_SECRET'),
+                        signOptions: {
+                            expiresIn: config.get('JWT_EXP'),
+                        },
+                    }),
+                }),
+            ],
             inject: [ConfigService],
             useFactory: (configService: ConfigService) => ({
                 type: 'mysql',

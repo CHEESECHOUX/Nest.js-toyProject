@@ -47,7 +47,7 @@ describe('AuthService', () => {
         let createUserDTO;
 
         beforeEach(async () => {
-            //Given
+            // Given
             createUserDTO = new CreateUserDTO();
             createUserDTO.name = 'jisoo';
             createUserDTO.email = 'jisoo@test.com';
@@ -81,26 +81,28 @@ describe('AuthService', () => {
     });
 
     describe('login', () => {
+        // describe 함수는 동기적으로 실행 async 사용할 수 없음
         const logInDTO: LogInDTO = {
             email: 'jisoo@test.com',
             password: 'hashedPassword',
         };
-        const user: User = {
-            id: 1,
-            name: 'Jisoo',
-            email: logInDTO.email,
-            password: 'hashedPassword',
-            isActive: true,
-            isDeleted: false,
-            createdAt: new Date('2023-06-15 00:27:57.070889'),
-            updatedAt: new Date('2023-06-15 00:27:57.070889'),
-        };
 
-        it('should throw UnauthorizedException if email is not found', async () => {
+        beforeEach(async () => {
             // Given
+            const salt = await bcrypt.genSalt();
+            const hashedPassword = await bcrypt.hash(logInDTO.password, salt);
+
+            const user = new User();
+            user.email = logInDTO.email;
+            user.password = hashedPassword;
+
+            await usersRepository.save(user);
+        });
+
+        // When / Then
+        it('should throw UnauthorizedException if email is not found', async () => {
             jest.spyOn(usersService, 'getUserByEmail').mockResolvedValue(null);
 
-            // When/Then
             await expect(authService.login(logInDTO)).rejects.toThrow(UnauthorizedException);
             expect(usersService.getUserByEmail).toHaveBeenCalledWith(logInDTO.email);
         });
