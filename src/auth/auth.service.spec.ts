@@ -87,22 +87,25 @@ describe('AuthService', () => {
             password: 'hashedPassword',
         };
 
+        let user;
+
         beforeEach(async () => {
             // Given
             const salt = await bcrypt.genSalt();
             const hashedPassword = await bcrypt.hash(logInDTO.password, salt);
 
-            const user = new User();
+            user = new User();
             user.email = logInDTO.email;
             user.password = hashedPassword;
 
             await usersRepository.save(user);
         });
 
-        // When / Then
         it('should throw UnauthorizedException if email is not found', async () => {
+            // When
             jest.spyOn(usersService, 'getUserByEmail').mockResolvedValue(null);
 
+            // Then
             await expect(authService.login(logInDTO)).rejects.toThrow(UnauthorizedException);
             expect(usersService.getUserByEmail).toHaveBeenCalledWith(logInDTO.email);
         });
@@ -110,9 +113,7 @@ describe('AuthService', () => {
         it('should throw UnauthorizedException if password is not correct', async () => {
             // Given
             jest.spyOn(usersService, 'getUserByEmail').mockResolvedValue(user); // 해당하는 유저를 찾았다고 가정
-            jest.spyOn(bcrypt, 'compare').mockImplementation((password: string, InvalidPassword: string) => {
-                return password !== InvalidPassword;
-            });
+            jest.spyOn(bcrypt, 'compare').mockImplementation(() => Promise.resolve(false)); // 비밀번호가 틀렸다고 가정
 
             // When/Then
             await expect(authService.login(logInDTO)).rejects.toThrow(UnauthorizedException);
