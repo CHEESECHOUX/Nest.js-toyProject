@@ -1,4 +1,4 @@
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from '@src/auth/auth.service';
 import { User } from '@src/users/user.entity';
 import { Repository } from 'typeorm';
@@ -12,21 +12,19 @@ import { UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '@src/users/users.service';
 
 describe('AuthService', () => {
+    let usersRepository: Repository<User>;
     let authService: AuthService;
     let usersService: UsersService;
-    let usersRepository: Repository<User>;
     let jwtService: JwtService;
+    let module: TestingModule;
 
-    beforeEach(async () => {
-        const module = await Test.createTestingModule({
+    beforeAll(async () => {
+        module = await Test.createTestingModule({
             imports: [TestAppModule],
             providers: [
                 {
-                    provide: 'bcrypt',
-                    useValue: {
-                        genSalt: jest.fn(() => Promise.resolve('salt')),
-                        hashSync: jest.fn((password, salt) => bcrypt.hashSync(password, salt)),
-                    },
+                    provide: getRepositoryToken(User),
+                    useClass: Repository,
                 },
             ],
         }).compile();
@@ -37,41 +35,48 @@ describe('AuthService', () => {
         jwtService = module.get<JwtService>(JwtService);
     });
 
+    afterEach(async () => {
+        await usersRepository.delete({ email: 'jisoo@test.com' });
+    });
+
+    afterAll(async () => {
+        await module.close();
+    });
+
     describe('signUp', () => {
         let createUserDTO;
-        let findOneSpy;
-        let saveSpy;
-        let hashSpy;
-        let savedUser;
 
-        beforeEach(() => {
-            // Given
+        beforeEach(async () => {
+            //Given
             createUserDTO = new CreateUserDTO();
             createUserDTO.name = 'jisoo';
             createUserDTO.email = 'jisoo@test.com';
-            createUserDTO.password = 'hashedPassword';
+            createUserDTO.password = 'password';
 
-            findOneSpy = jest.spyOn(usersRepository, 'findOne');
-            findOneSpy.mockResolvedValue(null);
+            const salt = await bcrypt.genSalt();
+            jest.spyOn(bcrypt, 'hash');
 
-            saveSpy = jest.spyOn(usersRepository, 'save');
-            savedUser = new User();
-            Object.assign(savedUser, createUserDTO);
-            saveSpy.mockResolvedValue(savedUser);
+            const hashedPassword = await bcrypt.hash(createUserDTO.password, salt);
 
-            hashSpy = jest.spyOn(bcrypt, 'hash');
-            hashSpy.mockImplementation(async () => 'hashedPassword');
+            const user = new User();
+            user.name = createUserDTO.name;
+            user.email = createUserDTO.email;
+            user.password = hashedPassword;
+
+            await usersRepository.save(user);
+
+            // Then
+            const savedUser = await usersRepository.findOne({ where: { email: createUserDTO.email } });
+
+            expect(savedUser).toEqual(user);
+            expect(bcrypt.hash).toHaveBeenCalledWith(createUserDTO.password, salt);
         });
 
         it('should create a new user', async () => {
             // When
-            const result = await authService.signUp(createUserDTO);
+            jest.spyOn(usersRepository, 'findOne').mockResolvedValue(new User());
 
-            // Then
-            expect(findOneSpy).toHaveBeenCalledWith({ where: { email: createUserDTO.email } });
-            expect(hashSpy).toHaveBeenCalledWith(createUserDTO.password, expect.any(String));
-            expect(saveSpy).toHaveBeenCalledWith(expect.objectContaining(createUserDTO));
-            expect(result).toEqual(createUserDTO);
+            await expect(authService.signUp(createUserDTO)).rejects.toThrowError('이미 존재하는 이메일입니다');
         });
     });
 
