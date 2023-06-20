@@ -4,7 +4,6 @@ import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { Repository } from 'typeorm';
 import { JwtModule, JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
 import { AuthService } from '@src/auth/auth.service';
 import { JwtStrategy } from '@src/auth/jwt/jwt.strategy';
 import { AuthModule } from '@src/auth/auth.module';
@@ -78,13 +77,6 @@ import { PassportModule } from '@nestjs/passport';
         {
             provide: getRepositoryToken(User),
             useClass: Repository,
-        },
-        {
-            provide: 'bcrypt',
-            useValue: {
-                genSalt: jest.fn(() => Promise.resolve('salt')),
-                hashSync: jest.fn((password, salt) => bcrypt.hashSync(password, salt)),
-            },
         },
     ],
 })

@@ -5,7 +5,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     private readonly logger = new Logger(AllExceptionsFilter.name);
 
     catch(exception: HttpException | Error, host: ArgumentsHost) {
-        // 여기 exception 종류? 다시보기
         const ctx = host.switchToHttp();
         const res = ctx.getResponse<Response>();
         const req = ctx.getRequest<Request>();
